@@ -7,3 +7,4 @@
 - Bundled Merriweather and Fira Sans fonts, with nothing loaded from other sites.
 - Templates for posts, pages, archives, search, 404 and an optional home page.
 - Styled threaded comments, post meta with icons, and a "Featured" label for sticky posts.
+- Code blocks, image captions and comments stay inside the content column on small screens.
