@@ -12,7 +12,7 @@ A quiet block theme for blogs and portfolios. Large type, a narrow reading colum
 - **Sticky posts** get a "Featured" label on the post list.
 - **Styled comments** with cards, round avatars, a threaded reply line and a restyled comment form.
 - **Accessible by default.** Visible keyboard focus styles, text contrast of at least 4.5:1, and a skip link added by WordPress.
-- **Translation ready** with a text domain and a `.pot` file.
+- **Translation ready** with the `keepsake` text domain (translations load through WordPress.org).
 - **No build step and no dependencies.** No Composer, npm or plugins required.
 
 ### Templates
@@ -56,7 +56,6 @@ keepsake/
 ├── templates/         Block templates (index, single, page, archive, search, 404, home-page)
 ├── parts/             Template parts (header, footer)
 ├── assets/fonts/      Merriweather and Fira Sans (woff2) with their licenses
-├── languages/         keepsake.pot
 ├── screenshot.png     1200 x 900 theme screenshot
 ├── readme.txt         WordPress.org readme
 └── changelog.md
