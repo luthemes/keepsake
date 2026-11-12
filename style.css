@@ -151,3 +151,11 @@ select:focus-visible,
 main.wp-block-group > .alignfull { margin-left: -1.5rem; margin-right: -1.5rem; max-width: none; width: auto; }
 .wp-block-post-featured-image.alignwide img,
 .wp-block-post-featured-image.alignfull img { width: 100%; height: auto; display: block; }
+
+/* Keep classic content (pre blocks, captions, images) inside the column. */
+pre { max-width: 100%; overflow-x: auto; }
+img { max-width: 100%; height: auto; }
+.wp-caption { max-width: 100%; }
+.wp-caption img { height: auto; }
+.comment-card, .comment-body { min-width: 0; }
+.comment-body { overflow-wrap: anywhere; }
