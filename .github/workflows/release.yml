@@ -1,0 +1,108 @@
+name: release
+
+# Publishes a release and attaches the theme ZIP (keepsake.x.y.z.zip).
+#
+# - Merging a pull request from a `release/x.y.z` branch into develop does
+#   it all: it tags the merge commit `x.y.z` (no "v"), publishes the release
+#   with the notes from that version's section of changelog.md, then builds
+#   and attaches the ZIP. The tag is always on the merged code.
+# - Publishing a release by hand still works: the ZIP is built and attached.
+
+on:
+    pull_request:
+        types: [closed]
+        branches: [develop]
+    release:
+        types: [published]
+
+permissions:
+    contents: write
+
+jobs:
+    release:
+        if: github.event_name == 'release' || (github.event.pull_request.merged == true && startsWith(github.event.pull_request.head.ref, 'release/'))
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
+              with:
+                  ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.merge_commit_sha || github.ref }}
+
+            # Fail early if the tag, style.css and readme.txt disagree.
+            - name: Resolve version
+              id: version
+              env:
+                  EVENT: ${{ github.event_name }}
+                  RELEASE_TAG: ${{ github.event.release.tag_name }}
+                  BRANCH: ${{ github.event.pull_request.head.ref }}
+              run: |
+                  if [ "$EVENT" = "pull_request" ]; then
+                      TAG="${BRANCH#release/}"
+                  else
+                      TAG="$RELEASE_TAG"
+                  fi
+
+                  VERSION="${TAG#v}"
+                  SLUG="keepsake"
+                  STYLE_VERSION=$(grep -m1 '^Version:' style.css | sed 's/^Version:[[:space:]]*//' | tr -d '\r')
+                  STABLE_TAG=$(grep -m1 '^Stable tag:' readme.txt | sed 's/^Stable tag:[[:space:]]*//' | tr -d '\r')
+
+                  if [ "$VERSION" != "$STYLE_VERSION" ] || [ "$VERSION" != "$STABLE_TAG" ]; then
+                      echo "::error::Release $TAG must match Version in style.css ($STYLE_VERSION) and Stable tag in readme.txt ($STABLE_TAG)."
+                      exit 1
+                  fi
+
+                  echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+                  echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+                  echo "zip=$SLUG.$VERSION.zip" >> "$GITHUB_OUTPUT"
+
+            # Only for a merged release pull request: tag the merge commit and
+            # publish the release, with notes from changelog.md.
+            - name: Tag and publish the release
+              if: github.event_name == 'pull_request'
+              env:
+                  GH_TOKEN: ${{ github.token }}
+                  TAG: ${{ steps.version.outputs.tag }}
+                  VERSION: ${{ steps.version.outputs.version }}
+                  SHA: ${{ github.event.pull_request.merge_commit_sha }}
+              run: |
+                  if gh release view "$TAG" > /dev/null 2>&1; then
+                      echo "::error::A $TAG release already exists."
+                      exit 1
+                  fi
+
+                  python3 - "$VERSION" > release-notes.md <<'PY'
+                  import re, sys
+                  version = sys.argv[1]
+                  text = open('changelog.md', encoding='utf-8').read()
+                  match = re.search(r'^## \[?' + re.escape(version) + r'\]?[^\n]*\n(.*?)(?=^## |^\[[^\]]+\]: |\Z)', text, re.S | re.M)
+                  if not match or not match.group(1).strip():
+                      sys.exit(f'::error::changelog.md has no "## {version}" section.')
+                  print(match.group(1).strip())
+                  PY
+
+                  gh release create "$TAG" \
+                    --target "$SHA" \
+                    --title "$TAG" \
+                    --notes-file release-notes.md
+
+            # No build step: the theme is plain PHP, CSS and block templates.
+            # The ZIP has a top-level keepsake folder and no hidden files,
+            # readme.md or changelog.md, as WordPress.org requires.
+            - name: Create ZIP
+              run: |
+                  mkdir -p build/keepsake
+                  git ls-files -z \
+                    | grep -zvE '(^|/)\.|^readme\.md$|^changelog\.md$' \
+                    | xargs -0 -I{} cp --parents {} build/keepsake/
+                  (cd build && zip -rq "../${{ steps.version.outputs.zip }}" keepsake)
+                  unzip -l "${{ steps.version.outputs.zip }}"
+
+            - name: Upload ZIP to GitHub Release
+              env:
+                  GH_TOKEN: ${{ github.token }}
+              run: |
+                  gh release upload "${{ steps.version.outputs.tag }}" \
+                    "${{ steps.version.outputs.zip }}" \
+                    --clobber

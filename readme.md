@@ -68,6 +68,7 @@ There is no build step. Edit the files and reload your test site.
 - Work on branches and open pull requests against `develop`.
 - Check block templates after editing: every `<!-- wp:... -->` needs a matching closing comment.
 - Before a release, run the [Theme Check](https://wordpress.org/plugins/theme-check/) plugin on a test site.
+- To release, bump `Version` in `style.css`, `Stable tag` in `readme.txt` and add a section to `changelog.md`, then open a pull request from a branch named `release/1.0.1` (matching the version) into `develop`. Merging it tags `1.0.1`, publishes the release with the changelog notes and attaches `keepsake.1.0.1.zip`.
 - To package the theme for upload, zip the folder without hidden files, for example from the parent directory:
 
   ```
