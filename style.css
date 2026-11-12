@@ -24,8 +24,8 @@ body { margin: 0; }
 .site-header { background: #fafafa; border-bottom: 1px solid #e6e6e6; }
 .site-header .wp-block-navigation .current-menu-item > a,
 .site-header .wp-block-navigation .current_page_item > a { font-weight: 700; }
-.site-header .wp-block-navigation__submenu-icon { margin-left: .2em; }
-.site-header .wp-block-navigation__submenu-icon svg { stroke-width: 2.5px; width: 1em; height: 1em; }
+.site-header .wp-block-navigation__submenu-icon { margin-left: .25em; }
+.site-header .wp-block-navigation__submenu-icon svg { stroke-width: 2px; }
 
 /* Main column */
 main.wp-block-group { padding: 3.5rem 1.5rem 1.5rem; }
