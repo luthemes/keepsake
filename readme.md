@@ -68,6 +68,7 @@ There is no build step. Edit the files and reload your test site.
 - Work on branches and open pull requests against `develop`.
 - Check block templates after editing: every `<!-- wp:... -->` needs a matching closing comment.
 - Before a release, run the [Theme Check](https://wordpress.org/plugins/theme-check/) plugin on a test site.
+- To release, bump `Version` in `style.css` and `Stable tag` in `readme.txt`, then push a branch named `release/1.0.1` (matching the version). A GitHub Action builds `keepsake.1.0.1.zip` and attaches it to a GitHub release.
 - To package the theme for upload, zip the folder without hidden files, for example from the parent directory:
 
   ```

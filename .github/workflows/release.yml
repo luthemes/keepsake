@@ -1,0 +1,55 @@
+name: Release
+
+# Push a branch named release/1.0.1 to build keepsake.1.0.1.zip and publish it as a GitHub release.
+on:
+  push:
+    branches:
+      - 'release/**'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Get version from branch name
+        run: |
+          VERSION="${GITHUB_REF_NAME#release/}"
+          VERSION="${VERSION#v}"
+          echo "VERSION=${VERSION}" >> "$GITHUB_ENV"
+
+      - name: Check the version matches the theme
+        run: |
+          STYLE=$(grep -m1 '^Version:' style.css | sed 's/^Version:[[:space:]]*//' | tr -d '\r')
+          STABLE=$(grep -m1 '^Stable tag:' readme.txt | sed 's/^Stable tag:[[:space:]]*//' | tr -d '\r')
+          echo "branch=$VERSION style.css=$STYLE readme.txt=$STABLE"
+          if [ "$STYLE" != "$VERSION" ] || [ "$STABLE" != "$VERSION" ]; then
+            echo "::error::Branch version $VERSION must match Version in style.css and Stable tag in readme.txt."
+            exit 1
+          fi
+
+      - name: Build zip
+        run: |
+          mkdir -p build/keepsake
+          git ls-files -z \
+            | grep -zvE '(^|/)\.|^readme\.md$|^changelog\.md$' \
+            | xargs -0 -I{} cp --parents {} build/keepsake/
+          cd build
+          zip -rq "keepsake.${VERSION}.zip" keepsake
+          unzip -l "keepsake.${VERSION}.zip"
+
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh release view "$VERSION" >/dev/null 2>&1; then
+            gh release upload "$VERSION" "build/keepsake.${VERSION}.zip" --clobber
+          else
+            gh release create "$VERSION" "build/keepsake.${VERSION}.zip" \
+              --target "$GITHUB_SHA" \
+              --title "Keepsake ${VERSION}" \
+              --generate-notes
+          fi
