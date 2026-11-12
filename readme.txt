@@ -1,5 +1,5 @@
 === Keepsake ===
-Contributors: benlumia007
+Contributors: luthemes
 Requires at least: 6.6
 Tested up to: 7.1
 Requires PHP: 7.4
